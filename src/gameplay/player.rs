@@ -543,7 +543,7 @@ pub fn spawn_player_bullet(
                 },
                 texture: bullet_texture.clone(),
                 transform: Transform {
-                    translation: player.translation + Vec3::new(0.0, 5.0, 0.0),
+                    translation: player.translation + Vec3::new(0.0, 10.0, 0.0),
                     ..default()
                 },
                 ..default()
