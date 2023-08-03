@@ -1,6 +1,7 @@
 use bevy::asset::LoadState;
 use bevy::prelude::*;
 use bevy::utils::HashMap;
+#[cfg(not(target_family = "wasm"))]
 use bevy_hanabi::prelude::*;
 
 use super::GameplayState;
@@ -39,9 +40,11 @@ pub fn load_texture_atlases(
 
 // Hash table holding handles to loaded particle effects.
 // The keys are strings/names, while the values are the handles.
+#[cfg(not(target_family = "wasm"))]
 #[derive(Resource, Default, Debug, Deref, DerefMut)]
 pub struct ParticleEffects<'a>(HashMap<&'a str, Handle<EffectAsset>>);
 
+#[cfg(not(target_family = "wasm"))]
 pub fn load_particle_effects(
     mut effects: ResMut<Assets<EffectAsset>>,
     mut effect_handles: ResMut<ParticleEffects<'static>>,
@@ -121,7 +124,7 @@ pub fn check_background_loaded(asset_server: Res<AssetServer>, bg: Res<Backgroun
     true
 }
 
-#[allow(unused)] // bug: hangs
+// bug: hangs
 pub fn check_atlases_loaded(
     asset_server: Res<AssetServer>,
     atlases: Res<Atlases<'static>>,
@@ -132,7 +135,8 @@ pub fn check_atlases_loaded(
         .all(|v| asset_server.get_load_state(v) == LoadState::Loaded)
 }
 
-#[allow(unused)] // bug: hangs
+// bug: hangs
+#[cfg(not(target_family = "wasm"))]
 pub fn check_particles_loaded(
     asset_server: Res<AssetServer>,
     particles: Res<ParticleEffects<'static>>,

@@ -7,6 +7,7 @@ mod win_game;
 use bevy::diagnostic::{EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin};
 use bevy::prelude::*;
 // use bevy_editor_pls::prelude::EditorPlugin;
+#[cfg(not(target_family = "wasm"))]
 use bevy_hanabi::HanabiPlugin;
 
 const DEBUG_TIMER_DURATION: f32 = 5.0;
@@ -84,8 +85,8 @@ fn main() {
         .init_resource::<DebugTimer>()
         .add_systems(Startup, debug_startup_game_state)
         .add_systems(Update, (tick_debug_timer, debug_game_state))
-        .add_plugin(FrameTimeDiagnosticsPlugin)
-        .add_plugin(EntityCountDiagnosticsPlugin);
+        .add_plugins(FrameTimeDiagnosticsPlugin)
+        .add_plugins(EntityCountDiagnosticsPlugin);
         //.add_plugin(EditorPlugin);
     } else {
         app.add_plugins(DefaultPlugins.set(WindowPlugin {
@@ -104,16 +105,19 @@ fn main() {
         }));
     }
 
+
     app.add_systems(Startup, spawn_camera)
         // Particle effects creator and renderer
-        .add_plugin(HanabiPlugin)
         .add_state::<GameState>()
         .init_resource::<GameOptions>()
         .init_resource::<HighScore>()
-        .add_plugin(landing_screen::LandingScreenPlugin)
-        .add_plugin(game_over::GameOverPlugin)
-        .add_plugin(gameplay::GameplayPlugin)
-        .add_plugin(win_game::WinGamePlugin);
+        .add_plugins(landing_screen::LandingScreenPlugin)
+        .add_plugins(game_over::GameOverPlugin)
+        .add_plugins(gameplay::GameplayPlugin)
+        .add_plugins(win_game::WinGamePlugin);
+
+    #[cfg(not(target_family = "wasm"))]
+    app.add_plugins(HanabiPlugin);
 
     app.run();
 }

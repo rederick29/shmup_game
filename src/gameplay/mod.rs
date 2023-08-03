@@ -45,9 +45,10 @@ impl Plugin for GameplayPlugin {
         app.add_state::<GameplayState>()
             .add_event::<event::TakeDamageEvent>()
             .add_event::<event::DespawnEvent>()
-            .add_event::<event::GameOverEvent>()
+            .add_event::<event::GameOverEvent>();
+
+        app
             .insert_resource::<loading::Atlases>(Default::default())
-            .insert_resource::<loading::ParticleEffects>(Default::default())
             .insert_resource::<loading::BackgroundHandle>(Default::default())
             .insert_resource::<collisions::Collisions>(collisions::Collisions::default())
             .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(
@@ -60,7 +61,6 @@ impl Plugin for GameplayPlugin {
             .add_systems(OnEnter(GameplayState::Loading),
                 (
                     loading::load_background,
-                    loading::load_particle_effects,
                     loading::load_texture_atlases,
                     ui::create_stats_list,
                 )
@@ -126,7 +126,6 @@ impl Plugin for GameplayPlugin {
                     despawn_component::<enemy::Enemy>,
                     despawn_component::<levels::Wall>,
                     despawn_component::<ui::GameplayUI>,
-                    despawn_component::<player::PlayerBooster>,
                     despawn_component::<levels::LevelBackground>,
                     despawn_component::<collectables::Collectable>,
                     levels::remove_level,
@@ -173,6 +172,13 @@ impl Plugin for GameplayPlugin {
                 )
                 .in_set(CustomSet::UpdateStats)
             );
+
+        #[cfg(not(target_family = "wasm"))]
+        app
+            .insert_resource::<loading::ParticleEffects>(Default::default())
+            .add_systems(OnEnter(GameplayState::Loading), loading::load_particle_effects)
+            .add_systems(OnExit(GameplayState::Playing), despawn_component::<player::PlayerBooster>);
+
     }
 }
 

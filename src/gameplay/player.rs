@@ -3,14 +3,18 @@ use crate::gameplay::event::DespawnEvent;
 use super::{
     bullet::{Bullet, BulletGroup},
     collisions::{ColliderType, PLAYER_BULLET_COL},
-    loading::{Atlases, ParticleEffects},
+    loading::Atlases,
     shared::{physics::*, Counter, Formation, Health, MetaSprite, Movement, METRE, METRE_SQUARED},
     ui::{
         create_counter, create_health_bar, Link, ObjectType, ProgressBar, StatsList, UpdatingText,
     },
 };
 use bevy::prelude::*;
+
+#[cfg(not(target_family = "wasm"))]
 use bevy_hanabi::prelude::*;
+#[cfg(not(target_family = "wasm"))]
+use super::loading::ParticleEffects;
 
 #[derive(Component)]
 pub struct Player;
@@ -330,9 +334,11 @@ impl Default for PlayerAttackCD {
     }
 }
 
+#[cfg(not(target_family = "wasm"))]
 #[derive(Component)]
 pub struct PlayerBooster;
 
+#[cfg(not(target_family = "wasm"))]
 pub fn spawn_player(
     mut commands: Commands,
     mut ui_list: Query<(Entity, &mut StatsList)>,
@@ -397,6 +403,96 @@ pub fn spawn_player(
                 },
             ));
         }).id();
+
+    create_counter::<ScoreText>(
+        &mut commands,
+        &mut ui_list,
+        &assets,
+        ScoreText { entity: player_entity }
+    );
+
+    create_counter::<GrazeText>(
+        &mut commands,
+        &mut ui_list,
+        &assets,
+        GrazeText { entity: player_entity }
+    );
+
+    create_counter::<PowerText>(
+        &mut commands,
+        &mut ui_list,
+        &assets,
+        PowerText { entity: player_entity }
+    );
+
+    create_counter::<SpecialsText>(
+        &mut commands,
+        &mut ui_list,
+        &assets,
+        SpecialsText { entity: player_entity }
+    );
+
+    create_counter::<EnemiesKilledText>(
+        &mut commands,
+        &mut ui_list,
+        &assets,
+        EnemiesKilledText { entity: player_entity }
+    );
+}
+
+#[cfg(target_family = "wasm")]
+pub fn spawn_player(
+    mut commands: Commands,
+    mut ui_list: Query<(Entity, &mut StatsList)>,
+    atlases: Res<Atlases<'static>>,
+    assets: Res<AssetServer>,
+) {
+    let player_name = super::shared::Name::from("Player 1");
+    let health_bar = PlayerHealthBar;
+    let health_bar = create_health_bar::<PlayerHealthBar>(
+        &mut commands,
+        &assets,
+        player_name.clone(),
+        ObjectType::Player,
+        health_bar,
+    );
+
+    let mut binding = commands
+        .spawn((
+            Player,
+            Score::default(),
+            Power::new(0, 500),
+            Health::new(30.0, None),
+            RigidBody::Dynamic,
+            Velocity::zero(),
+            Collider::ball(5.0),
+            ColliderType::Player,
+            ColliderType::Player.collision_group(),
+            ActiveEvents::COLLISION_EVENTS,
+            LockedAxes::ROTATION_LOCKED,
+            Movement::new(
+                Vec2::new(240.0, 240.0),
+                Vec2::ZERO,
+                false,
+                Vec2::ZERO,
+                Vec2::ZERO,
+            ),
+            player_name,
+            Link(health_bar),
+            SpriteSheetBundle {
+                texture_atlas: atlases.get("sprites/white-plane3.png").unwrap().clone(),
+                transform: Transform::from_translation(Vec3::new(0.0, -300.0, 0.1)),
+                sprite: TextureAtlasSprite {
+                    index: 5,
+                    custom_size: Some(Vec2::new(48.0, 68.0)),
+                    ..default()
+                },
+                ..default()
+            },
+        ));
+    binding.insert((EnemiesKilled::default(), Specials::new(5), Graze::default()));
+
+    let player_entity = binding.id();
 
     create_counter::<ScoreText>(
         &mut commands,
