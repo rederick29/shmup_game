@@ -24,14 +24,14 @@ pub struct WinGamePlugin;
 
 impl Plugin for WinGamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(spawn_ui.in_schedule(OnEnter(GameState::GameWon)))
-            .add_systems(
+        app.add_systems(OnEnter(GameState::GameWon), spawn_ui)
+            .add_systems(Update,
                 (
                     button_interactions,
                     crate::ui::colour_buttons,
-                ).in_set(OnUpdate(GameState::GameWon))
+                ).run_if(in_state(GameState::GameWon))
             )
-            .add_systems((crate::despawn_component::<InWinGameMenu>, despawn_component::<Player>).in_schedule(OnExit(GameState::GameWon)));
+            .add_systems(OnExit(GameState::GameWon), (crate::despawn_component::<InWinGameMenu>, despawn_component::<Player>));
     }
 }
 
@@ -42,7 +42,7 @@ fn button_interactions(
     mut game_state: ResMut<NextState<GameState>>,
 ) {
     for (interaction, action) in interaction.iter() {
-        if *interaction == Interaction::Clicked {
+        if *interaction == Interaction::Pressed {
             match action {
                 Action::ToMainMenu => game_state.set(GameState::Menu),
                 Action::Exit => exit.send(AppExit),
@@ -66,7 +66,8 @@ pub fn spawn_ui(
     }
 
     let button_style = Style {
-        size: Size::new(Val::Px(175.0), Val::Px(50.0)),
+        width: Val::Px(175.0),
+        height: Val::Px(50.0),
         margin: UiRect::all(Val::Px(10.0)),
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
@@ -79,7 +80,7 @@ pub fn spawn_ui(
         color: crate::ui::TEXT_COLOUR,
     };
 
-    let base_text_bundle = TextBundle::from_section(
+    let base_text_bundle = || TextBundle::from_section(
         "",
         TextStyle {
             font: font.clone(),
@@ -141,7 +142,7 @@ pub fn spawn_ui(
             ));
 
             for string in formatted_strings {
-                let mut bundle = base_text_bundle.clone();
+                let mut bundle = base_text_bundle();
                 bundle.text.sections[0].value = string;
                 parent.spawn(bundle);
             }

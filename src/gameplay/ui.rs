@@ -72,8 +72,9 @@ pub fn create_stats_list(mut commands: Commands) {
     commands.spawn((
         NodeBundle {
             style: Style {
+                top: Val::Px(30.0),
+                right: Val::Px(30.0),
                 position_type: PositionType::Absolute,
-                position: list.position,
                 flex_direction: FlexDirection::Column,
                 justify_content: JustifyContent::FlexStart,
                 align_items: AlignItems::FlexStart,
@@ -137,17 +138,17 @@ pub fn create_health_bar<T: ProgressBar + Component>(
     // Choose where the health bar spawn depending
     // on whether its the enemy's or the player's
     let position = match kind {
-        ObjectType::Enemy => UiRect {
+        ObjectType::Enemy => Style {
             top: Val::Px(30.0),
             left: Val::Px(30.0),
             ..default()
         },
-        ObjectType::Player => UiRect {
+        ObjectType::Player => Style {
             bottom: Val::Px(30.0),
             right: Val::Px(30.0),
             ..default()
         },
-        ObjectType::Neutral => UiRect {
+        ObjectType::Neutral => Style {
             top: Val::Px(30.0),
             right: Val::Px(30.0),
             ..default()
@@ -168,8 +169,7 @@ pub fn create_health_bar<T: ProgressBar + Component>(
         .with_style(Style {
             //align_self: AlignSelf::FlexStart,
             position_type: PositionType::Absolute,
-            position,
-            ..default()
+            ..position
         }),
     );
     // The background of the bar
@@ -178,11 +178,9 @@ pub fn create_health_bar<T: ProgressBar + Component>(
             parent
                 .spawn(NodeBundle {
                     style: Style {
-                        size: Size::new(Val::Px(200.0), Val::Px(16.0)),
-                        position: UiRect {
-                            top: Val::Px(20.0),
-                            ..default()
-                        },
+                        width: Val::Px(200.0),
+                        height: Val::Px(16.0),
+                        top: Val::Px(20.0),
                         position_type: PositionType::Relative,
                         ..default()
                     },
@@ -194,8 +192,12 @@ pub fn create_health_bar<T: ProgressBar + Component>(
                     parent
                         .spawn(NodeBundle {
                             style: Style {
-                                size: Size::new(Val::Percent(100.0), Val::Percent(80.0)),
-                                position: UiRect::all(Val::Px(4.0)),
+                                width: Val::Percent(100.0),
+                                height: Val::Percent(80.0),
+                                top: Val::Px(4.0),
+                                bottom: Val::Px(4.0),
+                                left: Val::Px(4.0),
+                                right: Val::Px(4.0),
                                 position_type: PositionType::Relative,
                                 justify_content: JustifyContent::Center,
                                 align_self: AlignSelf::Auto,
@@ -222,7 +224,7 @@ pub fn update_health_bar<B: Component + ProgressBar, C: Component>(
         let fraction = health.current / health.total;
         for (mut bar_color, mut bar_style) in &mut health_bars {
             // Update bar size with percentage of total entity health
-            bar_style.size.width = Val::Percent(fraction * 100.0);
+            bar_style.width = Val::Percent(fraction * 100.0);
             // Make the bar red when under 25% health
             if fraction <= 0.25 {
                 bar_color.0 = Color::RED;

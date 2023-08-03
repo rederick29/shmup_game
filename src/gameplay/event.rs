@@ -9,7 +9,7 @@ use super::{
 use crate::{GameState, gameplay::player::EnemiesKilled};
 use bevy::prelude::*;
 
-#[derive(Debug)]
+#[derive(Debug, Event)]
 pub struct TakeDamageEvent {
     entity: Entity,
     entity_type: Option<ColliderType>,
@@ -75,6 +75,7 @@ pub fn score_on_enemy_damage(
     }
 }
 
+#[derive(Event)]
 pub struct DespawnEvent {
     entity: Entity,
     recursive: bool,
@@ -142,7 +143,7 @@ pub fn create_collectables_on_despawn(
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Event)]
 pub struct GameOverEvent;
 
 pub fn game_over(

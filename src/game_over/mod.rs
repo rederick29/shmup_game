@@ -32,18 +32,16 @@ pub struct GameOverPlugin;
 
 impl Plugin for GameOverPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(menu::spawn_ui.in_schedule(OnEnter(GameState::GameOver)))
-            .add_systems(
+        app.add_systems(OnEnter(GameState::GameOver), menu::spawn_ui)
+            .add_systems(Update,
                 (
                     button_interactions,
                     crate::ui::animate_text::<GameOverText>,
                     crate::ui::colour_buttons,
                 )
-                    .in_set(OnUpdate(GameState::GameOver)),
+                    .run_if(in_state(GameState::GameOver)),
             )
-            .add_system(
-                crate::despawn_component::<InGameOverMenu>.in_schedule(OnExit(GameState::GameOver)),
-            );
+            .add_systems(OnExit(GameState::GameOver), crate::despawn_component::<InGameOverMenu>);
     }
 }
 
@@ -55,7 +53,7 @@ fn button_interactions(
     mut game_state: ResMut<NextState<GameState>>,
 ) {
     for (interaction, action) in interaction.iter() {
-        if *interaction == Interaction::Clicked {
+        if *interaction == Interaction::Pressed {
             match action {
                 Action::Retry => game_state.set(GameState::Gameplay),
                 Action::ToMainMenu => game_state.set(GameState::Menu),

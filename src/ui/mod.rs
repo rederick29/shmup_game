@@ -16,7 +16,7 @@ pub fn colour_buttons(
 ) {
     for (interaction, mut colour) in interaction.iter_mut() {
         *colour = match *interaction {
-            Interaction::Clicked => BUTTON_PRESS.into(),
+            Interaction::Pressed => BUTTON_PRESS.into(),
             Interaction::Hovered => BUTTON_HOVER.into(),
             Interaction::None => BUTTON_BASE.into(),
         }

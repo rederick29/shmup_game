@@ -6,7 +6,8 @@ use bevy::prelude::*;
 pub fn setup(mut commands: Commands, assets: Res<AssetServer>) {
     let font: Handle<Font> = assets.load("fonts/FiraSans-Bold.ttf");
     let button_style = Style {
-        size: Size::new(Val::Px(175.0), Val::Px(50.0)),
+        width: Val::Px(175.0),
+        height: Val::Px(50.0),
         margin: UiRect::all(Val::Px(15.0)),
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
@@ -60,11 +61,8 @@ pub fn setup(mut commands: Commands, assets: Res<AssetServer>) {
             NodeBundle {
                 style: Style {
                     position_type: PositionType::Absolute,
-                    position: UiRect {
-                        right: Val::Px(20.0),
-                        bottom: Val::Px(10.0),
-                        ..default()
-                    },
+                    right: Val::Px(20.0),
+                    bottom: Val::Px(10.0),
                     flex_direction: FlexDirection::Column,
                     justify_content: JustifyContent::FlexStart,
                     align_items: AlignItems::FlexStart,

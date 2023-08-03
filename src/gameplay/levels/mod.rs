@@ -37,51 +37,40 @@ pub struct LevelsPlugin;
 impl Plugin for LevelsPlugin {
     fn build(&self, app: &mut App) {
         app.add_state::<CurrentLevel>()
-            .add_systems(
+            .add_systems(OnEnter(CurrentLevel::One),
                 (
                     level1::spawn_boss,
                     reset_enemies_killed,
                 )
-                .in_schedule(OnEnter(CurrentLevel::One))
             )
-            .add_systems(
+            .add_systems(Update,
                 (
                     level1::enemy_movement,
                     level1::spawn_enemies,
                     level1::boss_movement,
-                ).in_set(OnUpdate(CurrentLevel::One))
+                ).run_if(in_state(CurrentLevel::One))
             )
-            .add_systems(
-                (
-                    convert_leftover_bullets,
-                ).in_schedule(OnExit(CurrentLevel::One))
-            )
-            .add_systems(
+            .add_systems(OnExit(CurrentLevel::One), convert_leftover_bullets)
+            .add_systems(OnEnter(CurrentLevel::Two),
                 (level2::spawn_boss, level2::setup_level, reset_enemies_killed, magnetise_all)
-                .in_schedule(OnEnter(CurrentLevel::Two))
             )
-            .add_systems(
+            .add_systems(Update,
                 (
                     level2::spawn_enemies,
                     level2::enemy_movement,
                     level2::boss_movement,
-                ).in_set(OnUpdate(CurrentLevel::Two))
+                ).run_if(in_state(CurrentLevel::Two))
             )
-            .add_systems(
-                (
-                    convert_leftover_bullets,
-                ).in_schedule(OnExit(CurrentLevel::Two))
-            )
-            .add_systems(
+            .add_systems(OnExit(CurrentLevel::Two), convert_leftover_bullets)
+            .add_systems(OnEnter(CurrentLevel::Three),
                 (level3::spawn_boss, level3::setup_level, reset_enemies_killed, magnetise_all)
-                .in_schedule(OnEnter(CurrentLevel::Three))
             )
-            .add_systems(
+            .add_systems(Update,
                 (
                     level3::spawn_enemies,
                     level3::enemy_movement,
                     level3::boss_movement,
-                ).in_set(OnUpdate(CurrentLevel::Three))
+                ).run_if(in_state(CurrentLevel::Three))
             );
     }
 }
@@ -281,7 +270,7 @@ pub fn create_playfield(mut commands: Commands, windows: Query<&Window>) {
 }
 
 pub fn advance_level(current_level: Res<State<CurrentLevel>>, mut next_level: ResMut<NextState<CurrentLevel>>, mut next_gamestate: ResMut<NextState<GameState>>, mut next_gameplaystate: ResMut<NextState<GameplayState>>) {
-    match current_level.0 {
+    match current_level.get() {
         CurrentLevel::One => next_level.set(CurrentLevel::Two),
         CurrentLevel::Two => next_level.set(CurrentLevel::Three),
         CurrentLevel::Three => {

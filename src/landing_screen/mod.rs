@@ -46,16 +46,14 @@ impl Plugin for LandingScreenPlugin {
         // }
 
         app.add_state::<MenuState>()
-            .add_system(setup.in_schedule(OnEnter(GameState::Menu)))
-            .add_system(main_menu::setup.in_schedule(OnEnter(MenuState::MainMenu)))
-            .add_system(despawn_component::<InMainMenu>.in_schedule(OnExit(MenuState::MainMenu)))
-            .add_system(options::setup.in_schedule(OnEnter(MenuState::Options)))
-            .add_system(options::update_option_text.in_set(OnUpdate(MenuState::Options)))
-            .add_system(despawn_component::<InOptionsMenu>.in_schedule(OnExit(MenuState::Options)))
-            .add_systems(
-                (crate::ui::colour_buttons, button_interactions).in_set(OnUpdate(GameState::Menu)),
-            )
-            .add_system(despawn_component::<InMainMenu>.in_schedule(OnExit(GameState::Menu)));
+            .add_systems(OnEnter(GameState::Menu), setup)
+            .add_systems(OnEnter(MenuState::MainMenu), main_menu::setup)
+            .add_systems(OnExit(MenuState::MainMenu), despawn_component::<InMainMenu>)
+            .add_systems(OnEnter(MenuState::Options), options::setup)
+            .add_systems(Update, options::update_option_text.run_if(in_state(MenuState::Options)))
+            .add_systems(OnExit(MenuState::Options), despawn_component::<InOptionsMenu>)
+            .add_systems(Update, (crate::ui::colour_buttons, button_interactions).run_if(in_state(GameState::Menu)))
+            .add_systems(OnExit(GameState::Menu), despawn_component::<InMainMenu>);
     }
 }
 
@@ -73,7 +71,7 @@ fn button_interactions(
     mut game_options: ResMut<crate::GameOptions>,
 ) {
     for (interaction, action) in interaction.iter() {
-        if *interaction == Interaction::Clicked {
+        if *interaction == Interaction::Pressed {
             match action {
                 Action::StartGameplay => {
                     game_state.set(GameState::Gameplay);

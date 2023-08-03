@@ -6,7 +6,7 @@ mod win_game;
 
 use bevy::diagnostic::{EntityCountDiagnosticsPlugin, FrameTimeDiagnosticsPlugin};
 use bevy::prelude::*;
-use bevy_editor_pls::prelude::EditorPlugin;
+// use bevy_editor_pls::prelude::EditorPlugin;
 use bevy_hanabi::HanabiPlugin;
 
 const DEBUG_TIMER_DURATION: f32 = 5.0;
@@ -82,12 +82,11 @@ fn main() {
             ..default()
         }))
         .init_resource::<DebugTimer>()
-        .add_startup_system(debug_startup_game_state)
-        .add_system(tick_debug_timer)
-        .add_system(debug_game_state)
+        .add_systems(Startup, debug_startup_game_state)
+        .add_systems(Update, (tick_debug_timer, debug_game_state))
         .add_plugin(FrameTimeDiagnosticsPlugin)
-        .add_plugin(EntityCountDiagnosticsPlugin)
-        .add_plugin(EditorPlugin);
+        .add_plugin(EntityCountDiagnosticsPlugin);
+        //.add_plugin(EditorPlugin);
     } else {
         app.add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
@@ -105,7 +104,7 @@ fn main() {
         }));
     }
 
-    app.add_startup_system(spawn_camera)
+    app.add_systems(Startup, spawn_camera)
         // Particle effects creator and renderer
         .add_plugin(HanabiPlugin)
         .add_state::<GameState>()

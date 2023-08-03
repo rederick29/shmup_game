@@ -29,7 +29,6 @@ pub enum GameplayState {
 
 // Custom execution stages for handling collisions and updating player data.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, SystemSet)]
-#[system_set(base)]
 enum CustomSet {
     Collisions,
     UpdateStats,
@@ -40,7 +39,7 @@ pub struct GameplayPlugin;
 impl Plugin for GameplayPlugin {
     fn build(&self, app: &mut App) {
         if cfg!(debug_assertions) {
-            app.add_plugin(RapierDebugRenderPlugin::default());
+            app.add_plugins(RapierDebugRenderPlugin::default());
         }
 
         app.add_state::<GameplayState>()
@@ -50,33 +49,33 @@ impl Plugin for GameplayPlugin {
             .insert_resource::<loading::Atlases>(Default::default())
             .insert_resource::<loading::ParticleEffects>(Default::default())
             .insert_resource::<loading::BackgroundHandle>(Default::default())
-            .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(
+            .insert_resource::<collisions::Collisions>(collisions::Collisions::default())
+            .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(
                 shared::METRE,
             ))
-            .add_plugin(levels::LevelsPlugin)
+            .add_plugins(levels::LevelsPlugin)
             // Enter Gameplay
-            .add_system(setup.in_schedule(OnEnter(GameState::Gameplay)))
+            .add_systems(OnEnter(GameState::Gameplay), setup)
             // Begin Loading / Early Load
-            .add_systems(
+            .add_systems(OnEnter(GameplayState::Loading),
                 (
                     loading::load_background,
                     loading::load_particle_effects,
                     loading::load_texture_atlases,
                     ui::create_stats_list,
                 )
-                    .in_schedule(OnEnter(GameplayState::Loading)),
             )
             // Early loading finished, switch to GameplayState::Playing
-            .add_system(
+            .add_systems(Update,
                 loading::finish_loading
                     .run_if(
                         loading::check_background_loaded, //.and_then(loading::check_particles_loaded)
                                                           //.and_then(loading::check_atlases_loaded)
                     )
-                    .in_set(OnUpdate(GameplayState::Loading)),
+                    .run_if(in_state(GameplayState::Loading))
             )
             // OnEnter
-            .add_systems(
+            .add_systems(OnEnter(GameplayState::Playing),
                 (
                     setup_gameplay,
                     levels::setup_background,
@@ -84,10 +83,9 @@ impl Plugin for GameplayPlugin {
                     levels::setup_levels,
                     player::spawn_player,
                 )
-                    .in_schedule(OnEnter(GameplayState::Playing)),
             )
             // OnUpdate
-            .add_systems(
+            .add_systems(Update,
                 (
                     back_to_menu,
                     tick_gameplay,
@@ -109,19 +107,19 @@ impl Plugin for GameplayPlugin {
                     player::move_player,
                     enemy::enemy_attack,
                 )
-                    .in_set(OnUpdate(GameplayState::Playing)),
+                    .run_if(in_state(GameplayState::Playing)),
             )
-            .add_systems(
+            .add_systems(Update,
                 (
                     shared::move_object::<bullet::Bullet>,
                     shared::move_object::<enemy::Enemy>,
                     shared::move_object::<collectables::Collectable>,
                     levels::pan_background,
                     levels::advance_level.run_if(levels::check_won),
-                ).in_set(OnUpdate(GameplayState::Playing))
+                ).run_if(in_state(GameplayState::Playing))
             )
             // OnExit -- Despawn all game objects
-            .add_systems(
+            .add_systems(OnExit(GameplayState::Playing),
                 (
                     remove_player,
                     despawn_component::<bullet::Bullet>,
@@ -133,33 +131,31 @@ impl Plugin for GameplayPlugin {
                     despawn_component::<collectables::Collectable>,
                     levels::remove_level,
                 )
-                    .in_schedule(OnExit(GameplayState::Playing)),
             )
             // Configure custom sets
             // Collisions update stage is after the normal Update stage
-            .configure_set(
+            .configure_set(PostUpdate,
                 CustomSet::Collisions
-                    .after(CoreSet::Update)
                     .run_if(in_state(GameplayState::Playing)),
             )
             // UpdateStats stage is after the Collision stage
-            .configure_set(
+            .configure_set(Update,
                 CustomSet::UpdateStats
                     .after(CustomSet::Collisions)
                     .run_if(in_state(GameplayState::Playing)),
             )
             // Collisions
-            .add_systems(
+            .add_systems(Update,
                 (
                     collisions::handle_bullet_col,
                     collisions::handle_player_col,
                     collisions::handle_enemy_col,
                     collisions::handle_collectable_col,
                 )
-                    .in_base_set(CustomSet::Collisions),
+                .in_set(CustomSet::Collisions)
             )
             // UpdateStats
-            .add_systems(
+            .add_systems(Update,
                 (
                     event::take_damage,
                     event::score_on_enemy_damage,
@@ -175,7 +171,7 @@ impl Plugin for GameplayPlugin {
                     ui::update_counter_ui::<player::EnemiesKilledText>,
                     collisions::cleanup_collisions,
                 )
-                    .in_base_set(CustomSet::UpdateStats),
+                .in_set(CustomSet::UpdateStats)
             );
     }
 }

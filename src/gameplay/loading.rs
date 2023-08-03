@@ -47,32 +47,37 @@ pub fn load_particle_effects(
     mut effect_handles: ResMut<ParticleEffects<'static>>,
 ) {
     // Define and add the particle effect for the player rocket booster
+    let mut module = Module::default();
+
+    let init_lifetime = SetAttributeModifier::new(Attribute::LIFETIME, module.lit(1.0));
+    let update_accel = AccelModifier::new(module.lit(Vec3::Y * -8.0));
+    let pos_b_r = module.lit(40.0);
+    let pos_t_r = module.lit(0.0);
+    let pos_h = module.lit(50.0);
+    let vel_c = module.lit(Vec3::ZERO);
+    let vel_s = module.lit(1.0);
+    let vel_a = module.lit(Vec3::Z);
+
     let player_booster_effect = effects.add(
-        EffectAsset {
-            name: "player_booster".to_string(),
-            capacity: 8192,
-            spawner: Spawner::rate(Value::Single(150.0)),
-            ..default()
-        }
+        EffectAsset::new(8192, Spawner::rate(CpuValue::Single(150.0)), module)
+        .with_name("player_booster")
         .with_property(
             "acceleration",
-            graph::Value::Float3(Vec3::new(0.0, -3.0, 0.0)),
+            graph::Value::Vector(Vec3::new(0.0, -3.0, 0.0).into()),
         )
-        .init(InitPositionCone3dModifier {
-            base_radius: 40.0,
-            top_radius: 0.0,
-            height: 50.0,
+        .init(SetPositionCone3dModifier {
+            base_radius: pos_b_r,
+            top_radius: pos_t_r,
+            height: pos_h,
             dimension: ShapeDimension::Surface,
         })
-        .init(InitVelocityCircleModifier {
-            center: Vec3::ZERO,
-            speed: 1.0.into(),
-            axis: Vec3::Z,
+        .init(SetVelocityCircleModifier {
+            center: vel_c,
+            speed: vel_s,
+            axis: vel_a,
         })
-        .init(InitLifetimeModifier {
-            lifetime: 1_f32.into(),
-        })
-        .update(AccelModifier::constant(Vec3::Y * -8.0))
+        .init(init_lifetime)
+        .update(update_accel)
         .render(ColorOverLifetimeModifier {
             gradient: {
                 let mut gradient = Gradient::new();
@@ -92,6 +97,7 @@ pub fn load_particle_effects(
                 gradient.add_key(1.0, Vec2::splat(3.0));
                 gradient
             },
+            screen_space_size: false,
         }),
     );
     effect_handles.insert("player_booster", player_booster_effect);

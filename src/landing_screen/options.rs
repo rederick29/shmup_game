@@ -14,7 +14,8 @@ pub enum OptionText {
 pub fn setup(mut commands: Commands, assets: Res<AssetServer>) {
     let font: Handle<Font> = assets.load("fonts/FiraSans-Bold.ttf");
     let button_style = Style {
-        size: Size::new(Val::Px(120.0), Val::Px(40.0)),
+        width: Val::Px(120.0),
+        height: Val::Px(40.0),
         margin: UiRect::all(Val::Px(10.0)),
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
@@ -31,12 +32,10 @@ pub fn setup(mut commands: Commands, assets: Res<AssetServer>) {
         .spawn((
             NodeBundle {
                 style: Style {
-                    size: Size::new(Val::Percent(95.0), Val::Percent(95.0)),
-                    position: UiRect {
-                        top: Val::Px(15.0),
-                        left: Val::Px(15.0),
-                        ..default()
-                    },
+                    width: Val::Percent(95.0),
+                    height: Val::Percent(95.0),
+                    top: Val::Px(15.0),
+                    left: Val::Px(15.0),
                     flex_direction: FlexDirection::Column,
                     align_items: AlignItems::FlexStart,
                     ..default()
@@ -80,7 +79,8 @@ pub fn setup(mut commands: Commands, assets: Res<AssetServer>) {
                             flex_wrap: FlexWrap::NoWrap,
                             justify_content: JustifyContent::SpaceBetween,
                             align_items: AlignItems::Center,
-                            size: Size::new(Val::Percent(98.0), Val::Percent(10.0)),
+                            width: Val::Percent(98.0),
+                            height: Val::Percent(10.0),
                             margin: UiRect {
                                 top: Val::Px(25.0),
                                 left: Val::Px(15.0),
@@ -115,7 +115,7 @@ pub fn setup(mut commands: Commands, assets: Res<AssetServer>) {
 
 fn setup_volume_buttons(parent: &mut ChildBuilder, text_style: &TextStyle, button_style: &Style) {
     let mut custom_style = button_style.clone();
-    custom_style.size.width = button_style.size.width / 2.0;
+    custom_style.width = button_style.width / 2.0;
 
     parent
         .spawn(NodeBundle {
@@ -123,7 +123,8 @@ fn setup_volume_buttons(parent: &mut ChildBuilder, text_style: &TextStyle, butto
                 flex_wrap: FlexWrap::NoWrap,
                 justify_content: JustifyContent::SpaceBetween,
                 align_items: AlignItems::Center,
-                size: Size::new(Val::Percent(98.0), Val::Percent(10.0)),
+                width: Val::Percent(98.0),
+                height: Val::Percent(10.0),
                 margin: UiRect {
                     top: Val::Px(25.0),
                     left: Val::Px(15.0),

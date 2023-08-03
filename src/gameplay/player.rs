@@ -588,9 +588,9 @@ pub fn move_player(
     // by adding 1 to the negation of the same key. This is so that the focus is alway 1 or 2, and
     // never 0 to avoid divide-by-zero errors.
     let focus = if game_options.get_focus() {
-        !input.pressed(KeyCode::LShift)
+        !input.pressed(KeyCode::ShiftLeft)
     } else {
-        input.pressed(KeyCode::LShift)
+        input.pressed(KeyCode::ShiftLeft)
     };
 
     let divisor: f32 = match focus {
